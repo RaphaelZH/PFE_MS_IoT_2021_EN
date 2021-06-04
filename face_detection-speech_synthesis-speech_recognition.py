@@ -82,7 +82,8 @@ class VideoCapture:
 
     def SpeechRecognition(self):
         mixer.init()
-        while (True == True):
+        response = None
+        while (response == None):
             # obtain audio from the microphone
             r = sr.Recognizer()
             with sr.Microphone() as source:
