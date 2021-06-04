@@ -9,6 +9,8 @@ from gtts import gTTS
 # quiet the endless 'insecurerequest' warning
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+from nltk.tokenize import word_tokenize
+
 
 DEFAULT_CASCADE_INPUT_PATH = 'haarcascade_frontalface_alt.xml'
 DEFAULT_OUTPUT_PATH = 'FaceCaptureImages/'
@@ -51,6 +53,7 @@ class VideoCapture:
 
             # If a face is detected, faces returns 1 or more depending on amount of faces detected
             if len(faces) > 0:
+                time.sleep(2)
                 print('Face Detected')
                 # Graph the face and draw a rectangle around it
                 for (x, y, w, h) in faces:
@@ -59,8 +62,16 @@ class VideoCapture:
                 cv2.imwrite(DEFAULT_OUTPUT_PATH + frameName + '.png', frame)
 
                 self.SpeechSynthesis()
-                self.SpeechRecognition()
-                break
+                response_list = self.SpeechRecognition()
+                if 'date' in response_list:
+                    mixer.init()
+                    tts = gTTS(
+                        text="Today is " + datetime.now().strftime("%d %B, %Y") + ".", lang='en')
+                    tts.save("date.mp3")
+                    mixer.music.load('date.mp3')
+                    mixer.music.play()
+                    time.sleep(5)
+                    break
 
             # If 'esc' is hit, the video is closed. We only wait for a fraction of a second per loop
             if cv2.waitKey(1) == 27:
@@ -91,6 +102,12 @@ class VideoCapture:
                 # listen for 1 second and create the ambient noise energy level
                 r.adjust_for_ambient_noise(source, duration=1)
                 print("Hello, what can I do for you? Recording starts.")
+                print('3')
+                time.sleep(1)
+                print('2')
+                time.sleep(1)
+                print('1')
+                time.sleep(1)
                 audio = r.listen(source, phrase_time_limit=5)
             # recognize speech using Sphinx/Google
             try:
@@ -108,6 +125,8 @@ class VideoCapture:
                 print("Sphinx could not understand audio")
             except sr.RequestError as e:
                 print("Sphinx error; {0}".format(e))
+
+            return word_tokenize(str(response))
 
 
 def Parse():

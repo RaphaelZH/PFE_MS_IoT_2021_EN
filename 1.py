@@ -1,34 +1,24 @@
-import speech_recognition as sr
-from gtts import gTTS
-#quiet the endless 'insecurerequest' warning
-import urllib3
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+# import the module
+import python_weather
+import asyncio
 
-from pygame import mixer
-mixer.init()
+async def getweather():
+    # declare the client. format defaults to metric system (celcius, km/h, etc.)
+    client = python_weather.Client(format=python_weather.IMPERIAL)
 
-while (True == True):
-# obtain audio from the microphone
-  r = sr.Recognizer()
-  with sr.Microphone() as source:
-    #print("Please wait. Calibrating microphone...")
-    # listen for 1 second and create the ambient noise energy level
-    r.adjust_for_ambient_noise(source, duration=1)
-    print("Say something!")
-    audio = r.listen(source,phrase_time_limit=5)
+    # fetch a weather forecast from a city
+    weather = await client.find("Jakarta")
 
-# recognize speech using Sphinx/Google
-  try:
-    #response = r.recognize_sphinx(audio)
-    response = r.recognize_google(audio)
-    print("I think you said '" + response + "'")
-    tts = gTTS(text="I think you said "+str(response), lang='en')
-    tts.save("response.mp3")
-    mixer.music.load('response.mp3')
-    mixer.music.play()
+    # returns the current day's forecast temperature (int)
+    print(weather.current.temperature)
 
+    # get the weather forecast for a few days
+    for forecast in weather.forecasts:
+        print(str(forecast.date), forecast.sky_text, forecast.temperature)
 
-  except sr.UnknownValueError:
-    print("Sphinx could not understand audio")
-  except sr.RequestError as e:
-    print("Sphinx error; {0}".format(e))
+    # close the wrapper once done
+    await client.close()
+
+if __name__ == "__main__":
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(getweather())
