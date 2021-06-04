@@ -89,19 +89,19 @@ class VideoCapture:
                 #print("Please wait. Calibrating microphone...")
                 # listen for 1 second and create the ambient noise energy level
                 r.adjust_for_ambient_noise(source, duration=1)
-                print("Hello, what can I do for you? Recording starts…")
+                print("Hello, what can I do for you? Recording starts.")
                 audio = r.listen(source, phrase_time_limit=5)
-
-        # recognize speech using Sphinx/Google
+            # recognize speech using Sphinx/Google
             try:
                 #response = r.recognize_sphinx(audio)
                 response = r.recognize_google(audio)
                 print("I think you said '" + response + "'")
                 tts = gTTS(text="I think you said " + str(response), lang='en')
+                print("I think you said " + str(response))
                 tts.save("response.mp3")
                 mixer.music.load('response.mp3')
                 mixer.music.play()
-                pass
+                time.sleep(5)
 
             except sr.UnknownValueError:
                 print("Sphinx could not understand audio")
