@@ -3,7 +3,12 @@ import argparse
 import os
 from datetime import datetime
 import time
-import pyttsx3
+from pygame import mixer
+import speech_recognition as sr
+from gtts import gTTS
+# quiet the endless 'insecurerequest' warning
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 DEFAULT_CASCADE_INPUT_PATH = 'haarcascade_frontalface_alt.xml'
 DEFAULT_OUTPUT_PATH = 'FaceCaptureImages/'
@@ -53,13 +58,8 @@ class VideoCapture:
                                   (0, 255, 0), 2)
                 cv2.imwrite(DEFAULT_OUTPUT_PATH + frameName + '.png', frame)
 
-                print("Hello, what can I do for you? Recording starts…")
-                engine = pyttsx3.init()
-                voices = engine.getProperty("voices")
-                engine.setProperty("rate", 200)
-                engine.setProperty("voice", voices[0].id)
-                engine.say("Hello, what can I do for you? Recording starts…")
-                engine.runAndWait()
+                self.SpeechSynthesis()
+                self.SpeechRecognition()
                 break
 
             # If 'esc' is hit, the video is closed. We only wait for a fraction of a second per loop
@@ -71,6 +71,42 @@ class VideoCapture:
         cv2.waitKey(500)
         cv2.destroyAllWindows()
         cv2.waitKey(500)
+
+    def SpeechSynthesis(self):
+        mixer.init()
+        tts = gTTS(
+            text="Hello, what can I do for you? Recording starts…", lang='en')
+        tts.save("question.mp3")
+        mixer.music.load('question.mp3')
+        mixer.music.play()
+
+    def SpeechRecognition(self):
+        mixer.init()
+        while (True == True):
+            # obtain audio from the microphone
+            r = sr.Recognizer()
+            with sr.Microphone() as source:
+                #print("Please wait. Calibrating microphone...")
+                # listen for 1 second and create the ambient noise energy level
+                r.adjust_for_ambient_noise(source, duration=1)
+                print("Hello, what can I do for you? Recording starts…")
+                audio = r.listen(source, phrase_time_limit=5)
+
+        # recognize speech using Sphinx/Google
+            try:
+                #response = r.recognize_sphinx(audio)
+                response = r.recognize_google(audio)
+                print("I think you said '" + response + "'")
+                tts = gTTS(text="I think you said " + str(response), lang='en')
+                tts.save("response.mp3")
+                mixer.music.load('response.mp3')
+                mixer.music.play()
+                pass
+
+            except sr.UnknownValueError:
+                print("Sphinx could not understand audio")
+            except sr.RequestError as e:
+                print("Sphinx error; {0}".format(e))
 
 
 def Parse():
